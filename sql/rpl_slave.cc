@@ -2592,7 +2592,6 @@ static int get_master_version_and_clock(MYSQL *mysql, Master_info *mi) {
   mysql_mutex_unlock(&mi->data_lock);
   mysql_mutex_unlock(mi->rli->relay_log.get_log_lock());
 
-
   /*
     Check that the master's server id and ours are different. Because if they
     are equal (which can result from a simple copy of master's datadir to slave,
