@@ -7076,7 +7076,6 @@ static Sys_var_charptr Sys_per_user_session_var_default_val(
     IN_FS_CHARSET, DEFAULT(0), NO_MUTEX_GUARD, NOT_IN_BINLOG,
     ON_CHECK(check_per_user_session_var));
 
-
 static Sys_var_bool Sys_send_error_before_closing_timed_out_connection(
     "send_error_before_closing_timed_out_connection",
     "Send error before closing connections due to timeout.",
