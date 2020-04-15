@@ -84,8 +84,9 @@ int slowfileremove(const char *filename) {
 
   /* Files submitted for removal may contain directory name convert path to
   file into simple filename "./test/t1.ibd" -> "__test_t1_ibd". */
-  std::replace_if(fname.begin(), fname.end(),
-                  [](char c) { return c == '.' || c == '/'; }, '_');
+  std::replace_if(
+      fname.begin(), fname.end(), [](char c) { return c == '.' || c == '/'; },
+      '_');
 
   if (gettimeofday(&tv, NULL)) {
     char *reason = strerror(errno);
