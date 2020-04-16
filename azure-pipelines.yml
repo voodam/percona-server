@@ -8,13 +8,13 @@ jobs:
   variables:
     UBUNTU_CODE_NAME: bionic
     BOOST_VERSION: boost_1_70_0
-    BOOST_DIR: $(Pipeline.Workspace)/boost
-    CCACHE_DIR: $(Pipeline.Workspace)/ccache
+    COMPRESSED_DIR: compressed
+    BOOST_DIR: $(Pipeline.Workspace)/$(COMPRESSED_DIR)/boost
+    CCACHE_DIR: $(Pipeline.Workspace)/$(COMPRESSED_DIR)/ccache
     CCACHE_COMPRESS: 1
     CCACHE_COMPRESSLEVEL: 9
     CCACHE_CPP2: 1
     CCACHE_MAXSIZE: 2G
-    Agent.Source.Git.ShallowFetchDepth: 256
 
   strategy:
     matrix:
@@ -141,9 +141,8 @@ jobs:
           BuildType: RelWithDebInfo
 
   steps:
-  - checkout: self
-    submodules: true
   - script: |
+      uname -r
       df -Th
       CC=$(Compiler)-$(CompilerVer)
       if [[ "$(Compiler)" == "clang" ]]; then
@@ -164,7 +163,7 @@ jobs:
       sudo -E apt-add-repository -y "ppa:ubuntu-toolchain-r/test"
       sudo -E apt-get -yq update >> ~/apt-get-update.log 2>&1
 
-      sudo -E apt-get -yq --no-install-suggests --no-install-recommends --allow-unauthenticated install $CXX $PACKAGES cmake cmake-curses-gui ccache bison libncurses5-dev libaio-dev libmecab-dev libnuma-dev liblzma-dev libssl-dev libreadline-dev libpam-dev libcurl4-openssl-dev || exit 1;
+      sudo -E apt-get -yq --no-install-suggests --no-install-recommends --allow-unauthenticated install $CXX $PACKAGES btrfs-progs cmake cmake-curses-gui ccache bison libncurses5-dev libaio-dev libmecab-dev libnuma-dev liblzma-dev libssl-dev libreadline-dev libpam-dev libcurl4-openssl-dev || exit 1;
       if [[ "$INVERTED" != "ON" ]]; then
         sudo -E apt-get -yq --no-install-suggests --no-install-recommends --allow-unauthenticated install libevent-dev libeditline-dev liblz4-dev libre2-dev protobuf-compiler libprotobuf-dev libprotoc-dev libicu-dev || exit 1;
       fi
@@ -185,9 +184,24 @@ jobs:
       echo '##vso[task.setvariable variable=UPDATE_TIME]'$UPDATE_TIME
       echo '##vso[task.prependpath]/usr/lib/ccache'
 
+      df -Th
+      mkdir percona-server
+      cd ..
+      truncate -s 12G $(COMPRESSED_DIR).img
+      mkfs.btrfs $(COMPRESSED_DIR).img
+      mkdir $(COMPRESSED_DIR)
+      sudo mount -o compress-force=zlib:9 -oloop $(COMPRESSED_DIR).img $(COMPRESSED_DIR)
+      sudo chmod a+rxw $(COMPRESSED_DIR)
+      sudo chmod a+rxw s
+      mkdir $(CCACHE_DIR)
+      mkdir $(BOOST_DIR)
+      mkdir $(COMPRESSED_DIR)/src
+      ls -l
+      df -Th
+
     displayName: '*** Install Build Dependencies'
 
-  - task: CacheBeta@1
+  - task: Cache@2
     continueOnError: true
     inputs:
       key: ccache | $(Agent.OS)-$(Compiler)-$(CompilerMajorVer)-$(BuildType) | $(Build.SourceVersion)
@@ -195,7 +209,7 @@ jobs:
       path: $(CCACHE_DIR)
     displayName: '*** Download/upload ccached files'
 
-  - task: CacheBeta@1
+  - task: Cache@2
     continueOnError: true
     inputs:
       key: $(BOOST_VERSION)
@@ -203,7 +217,15 @@ jobs:
       path: $(BOOST_DIR)
     displayName: '*** Download/upload $(BOOST_VERSION) libraries'
 
+  - checkout: self
+    path: $(COMPRESSED_DIR)/src
+    fetchDepth: 32
+
   - script: |
+      df -Th
+      git submodule sync
+      git submodule update --init --force --depth=256
+
       echo --- Set cmake parameters
       COMPILE_OPT+=(
         -DCMAKE_C_FLAGS_DEBUG=-g1
@@ -272,13 +294,14 @@ jobs:
     displayName: '*** CC=$(Compiler)-$(CompilerVer) cmake .. -DCMAKE_BUILD_TYPE=$(BuildType)'
 
   - script: |
+      df -Th
       cd bin
       make -j2 || exit 1
       ccache --show-stats
 
       BUILD_TIME=$SECONDS
       echo --- Total time $(($BUILD_TIME + $UPDATE_TIME + $CMAKE_TIME)) seconds. Build time $BUILD_TIME seconds. CMake took $CMAKE_TIME seconds. Packages updated in $UPDATE_TIME seconds.
-      rm -f $(Pipeline.Workspace)/boost/$(BOOST_VERSION).tar.gz
+      rm -f $(BOOST_DIR)/$(BOOST_VERSION).tar.gz
       df -Th
       rm -rf *
       df -Th
