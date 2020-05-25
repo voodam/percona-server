@@ -1,3 +1,5 @@
+# This test checks if all collations except binary are space padded.
+
 --source include/have_rocksdb.inc
 
 CREATE TABLE collations AS SELECT * FROM information_schema.COLLATION_CHARACTER_SET_APPLICABILITY WHERE COLLATION_NAME NOT IN ("latin2_czech_cs", "cp1250_czech_cs");
