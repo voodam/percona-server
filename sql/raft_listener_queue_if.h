@@ -3,17 +3,17 @@
 #pragma once
 
 #include <future>
-#include <vector>
 #include <map>
+#include <vector>
 
 /* Type of callback that raft plugin wants to invoke in the server */
 enum class RaftListenerCallbackType {
-  SET_READ_ONLY= 1,
-  UNSET_READ_ONLY= 2,
-  TRIM_LOGGED_GTIDS= 3,
-  ROTATE_BINLOG= 4,
-  ROTATE_RELAYLOG= 5,
-  RAFT_LISTENER_THREADS_EXIT= 6,
+  SET_READ_ONLY = 1,
+  UNSET_READ_ONLY = 2,
+  TRIM_LOGGED_GTIDS = 3,
+  ROTATE_BINLOG = 4,
+  ROTATE_RELAYLOG = 5,
+  RAFT_LISTENER_THREADS_EXIT = 6,
   RLI_RELAY_LOG_RESET = 7,
   RESET_SLAVE = 8,
   BINLOG_CHANGE_TO_APPLY = 9,
@@ -30,29 +30,29 @@ enum class RaftListenerCallbackType {
 /* Callback argument, each type would just populate the fields needed for its
  * callback */
 class RaftListenerCallbackArg {
-  public:
-    explicit RaftListenerCallbackArg() {}
+ public:
+  explicit RaftListenerCallbackArg() {}
 
-    std::vector<std::string> trim_gtids= {};
-    std::pair<std::string, unsigned long long> log_file_pos= {};
-    bool val_bool;
-    uint32_t val_uint;
-    std::pair<std::string, unsigned int> master_instance;
-    std::string val_str;
-    std::map<std::string, unsigned int> val_sys_var_uint;
+  std::vector<std::string> trim_gtids = {};
+  std::pair<std::string, unsigned long long> log_file_pos = {};
+  bool val_bool;
+  uint32_t val_uint;
+  std::pair<std::string, unsigned int> master_instance;
+  std::string val_str;
+  std::map<std::string, unsigned int> val_sys_var_uint;
 };
 
 /* Result of the callback execution in the server. This will be set in the
  * future's promise (in the QueueElement) and the invoker can get()/wait() for
  * the result. Add more fields as needed */
 class RaftListenerCallbackResult {
-  public:
-    explicit RaftListenerCallbackResult() {}
+ public:
+  explicit RaftListenerCallbackResult() {}
 
-    // Indicates if the callback was able to execute successfully
-    int error= 0;
-    std::vector<std::string> gtids;
-    std::string val_str;
+  // Indicates if the callback was able to execute successfully
+  int error = 0;
+  std::vector<std::string> gtids;
+  std::string val_str;
 };
 
 class RaftListenerQueueIf {
@@ -89,7 +89,7 @@ class RaftListenerQueueIf {
      * // fullfilled by the raft listener thread after executing the callback
      * RaftListenerCallbackResult result = fut.get();
      */
-    std::promise<RaftListenerCallbackResult>* result = nullptr;
+    std::promise<RaftListenerCallbackResult> *result = nullptr;
   };
 
   /* Add an element to the queue. This will signal any listening threads
