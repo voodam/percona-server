@@ -143,6 +143,11 @@ extern "C" void handle_fatal_signal(int sig)
   my_safe_printf_stderr("%s",
     "Hope that's ok; if not, decrease some variables in the equation.\n\n");
 
+  my_safe_printf_stderr("\n");
+  my_print_buildID();
+  my_safe_printf_stderr("Server Version: %s %s\n\n", server_version,
+                        MYSQL_COMPILATION_COMMENT);
+
 #ifdef HAVE_STACKTRACE
   THD *thd= my_thread_get_THR_THD();
 
@@ -226,8 +231,22 @@ extern "C" void handle_fatal_signal(int sig)
 
   if (test_flags & TEST_CORE_ON_SIGNAL)
   {
+#ifdef HAVE_LIBCOREDUMPER
+    if (opt_libcoredumper)
+    {
+      my_safe_printf_stderr("%s",
+                            "Writing a core file using lib coredumper\n");
+      my_write_libcoredumper(sig, opt_libcoredumper_path, curr_time);
+    }
+    else
+    {
+#else
     my_safe_printf_stderr("%s", "Writing a core file\n");
     my_write_core(sig);
+#endif
+#ifdef HAVE_LIBCOREDUMPER
+    }
+#endif
   }
 
 #ifndef _WIN32

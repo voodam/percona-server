@@ -47,7 +47,10 @@ void my_create_minidump(const char *name, HANDLE process, DWORD pid);
 #endif /* HAVE_BACKTRACE || HAVE_PRINTSTACK || _WIN32 */
 
 void my_write_core(int sig);
-
+#ifdef HAVE_LIBCOREDUMPER
+void my_write_libcoredumper(int sig, char *path, time_t curr_time);
+#endif
+void my_print_buildID();
 
 
 /**

@@ -392,6 +392,8 @@ extern char* enforce_storage_engine;
 extern char* utility_user;
 extern char* utility_user_password;
 extern char* utility_user_schema_access;
+extern bool opt_libcoredumper;
+extern char* opt_libcoredumper_path;
 extern ulonglong utility_user_privileges;
 
 /*
@@ -962,6 +964,7 @@ enum options_mysqld
   OPT_SSL_KEY,
   OPT_UPDATE_LOG,
   OPT_WANT_CORE,
+  OPT_COREDUMPER,
   OPT_LOG_ERROR,
   OPT_MAX_LONG_DATA_SIZE,
   OPT_EARLY_PLUGIN_LOAD,
