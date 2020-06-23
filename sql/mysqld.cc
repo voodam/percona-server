@@ -334,6 +334,7 @@ my_bool locked_in_memory;
 bool opt_using_transactions;
 bool volatile abort_loop;
 ulong opt_tc_log_size;
+bool opt_libcoredumper, opt_corefile= 0;
 
 static enum_server_operational_state server_operational_state= SERVER_BOOTING;
 ulong log_warnings;
@@ -681,6 +682,8 @@ char* enforce_storage_engine= NULL;
 char* utility_user= NULL;
 char* utility_user_password= NULL;
 char* utility_user_schema_access= NULL;
+
+char* opt_libcoredumper_path= NULL;
 
 /* Plucking this from sql/sql_acl.cc for an array of privilege names */
 extern TYPELIB utility_user_privileges_typelib;
@@ -4421,6 +4424,83 @@ a file name for --log-bin-index option", opt_binlog_index_name);
     unireg_abort(MYSQLD_ABORT_EXIT);
   }
 
+  if (opt_libcoredumper)
+  {
+#ifndef HAVE_LIBCOREDUMPER
+    sql_print_warning(
+        "This version of MySQL has not been compiled with "
+        "libcoredumper support, ignoring --coredumper argument");
+#else
+    if (opt_corefile)
+    {
+      sql_print_warning(
+          "Started with --core-file and --coredumper. "
+          "--coredumper will take precedence.");
+    }
+    if (opt_libcoredumper_path != NULL)
+    {
+      /* validate path */
+      if (!is_valid_log_name(opt_libcoredumper_path,
+                             strlen(opt_libcoredumper_path)))
+      {  //filename contain .cnf or .ini on it
+        sql_print_error("Variable --coredumper cannot be set to value %s",
+                        opt_libcoredumper_path);
+        unireg_abort(MYSQLD_ABORT_EXIT);
+      }
+      char   libcoredumper_dir[FN_REFLEN];
+      size_t libcoredumper_dir_length;
+      size_t opt_libcoredumper_path_length= strlen(opt_libcoredumper_path);
+      (void)dirname_part(libcoredumper_dir, opt_libcoredumper_path,
+                         &libcoredumper_dir_length);
+
+      if (!libcoredumper_dir_length)
+      {
+        sql_print_error("Error processing --coredumper path: %s",
+                        opt_libcoredumper_path);
+        unireg_abort(MYSQLD_ABORT_EXIT);
+      }
+      size_t libcoredumper_file_length=
+          opt_libcoredumper_path_length - libcoredumper_dir_length;
+      if (libcoredumper_file_length == 0)  //path is a directory
+      {
+        libcoredumper_file_length= 19;  //file is set to core.yyyymmddhhmmss
+      }
+      else
+      {
+        libcoredumper_file_length+= 17;  //file gets .yyyymmddhhmmss appended
+      }
+      if (opt_libcoredumper_path_length > FN_REFLEN)
+      {  // path is too long
+        sql_print_error("Variable --coredumper set to a too long path");
+        unireg_abort(MYSQLD_ABORT_EXIT);
+      }
+      if (libcoredumper_file_length > FN_LEN)
+      {  // filename is too long
+        sql_print_error("Variable --coredumper set to a too long filename");
+        unireg_abort(MYSQLD_ABORT_EXIT);
+      }
+      if (my_access(libcoredumper_dir, F_OK))
+      {
+        sql_print_error(
+            "Directory specified at --coredumper: %s does not exist",
+            libcoredumper_dir);
+        unireg_abort(MYSQLD_ABORT_EXIT);
+      }
+      if (my_access(libcoredumper_dir, (F_OK | W_OK)))
+      {
+        sql_print_error(
+            "Directory specified at --coredumper: %s is not writable",
+            libcoredumper_dir);
+        unireg_abort(MYSQLD_ABORT_EXIT);
+      }
+      if (libcoredumper_dir_length == strlen(opt_libcoredumper_path))
+      {  //only dirname was specified, append core to opt_libcoredumper_path
+        strcat(opt_libcoredumper_path, "core");
+      }
+    }
+#endif
+  }
+
   /* We have to initialize the storage engines before CSV logging */
   if (ha_init())
   {
@@ -6075,6 +6155,11 @@ struct my_option my_long_early_options[]=
   {"core-file", OPT_WANT_CORE,
    "Write core on errors.",
    0, 0, 0, GET_NO_ARG, NO_ARG, 0, 0, 0, 0, 0, 0},
+   {"coredumper", OPT_COREDUMPER,
+    "Use coredumper library to generate coredumps. Specify a path for coredump "
+    "otherwise it will be generated on datadir",
+    &opt_libcoredumper_path, &opt_libcoredumper_path, 0, GET_STR,
+    OPT_ARG, 0, 0, 0, 0, 0, 0},
   {"skip-stack-trace", OPT_SKIP_STACK_TRACE,
    "Don't print a stack trace on failure.", 0, 0, 0, GET_NO_ARG, NO_ARG, 0, 0,
    0, 0, 0, 0},
@@ -7877,6 +7962,11 @@ mysqld_get_one_option(int optid,
     break;
   case (int) OPT_WANT_CORE:
     test_flags |= TEST_CORE_ON_SIGNAL;
+    opt_corefile= MY_TEST(argument != disabled_my_option);
+    break;
+  case (int) OPT_COREDUMPER:
+    test_flags |= TEST_CORE_ON_SIGNAL;
+    opt_libcoredumper= MY_TEST(argument != disabled_my_option);
     break;
   case (int) OPT_SKIP_STACK_TRACE:
     test_flags|=TEST_NO_STACKTRACE;
