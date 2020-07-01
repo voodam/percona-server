@@ -1,7 +1,7 @@
 # Test clients with and without CRL lists
 ############ Test mysql ##############
 # Test mysql connecting to a server with an empty crl
-Variable_name	Value
+VARIABLE_NAME	VARIABLE_VALUE
 have_openssl	YES
 have_ssl	YES
 high_precision_processlist	OFF

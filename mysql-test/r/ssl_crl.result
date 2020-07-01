@@ -1,5 +1,5 @@
 # test --crl for the client : should connect
-Variable_name	Value
+VARIABLE_NAME	VARIABLE_VALUE
 have_openssl	YES
 have_ssl	YES
 high_precision_processlist	OFF
@@ -12,7 +12,7 @@ ssl_crlpath
 ssl_fips_mode	OFF
 ssl_key	MYSQL_TEST_DIR/std_data/crl-server-key.pem
 # test --crlpath for the client : should connect
-Variable_name	Value
+VARIABLE_NAME	VARIABLE_VALUE
 have_openssl	YES
 have_ssl	YES
 high_precision_processlist	OFF
