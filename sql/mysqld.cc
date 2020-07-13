@@ -10727,24 +10727,27 @@ static int generate_apply_file_gvars() {
   if (opt_apply_logname &&
       opt_apply_logname[strlen(opt_apply_logname) - 1] == FN_LIBCHAR) {
     // NO_LINT_DEBUG
-    sql_print_information("Path '%s' is a directory name, please specify a"
-        "file name for --apply-log option", opt_apply_logname);
+    sql_print_information(
+        "Path '%s' is a directory name, please specify a"
+        "file name for --apply-log option",
+        opt_apply_logname);
     DBUG_RETURN(1);
   }
 
   /* Reports an error and aborts, if the --apply-log-index's path
      is a directory.*/
   if (opt_applylog_index_name &&
-      opt_applylog_index_name[strlen(opt_applylog_index_name) - 1]
-      == FN_LIBCHAR) {
+      opt_applylog_index_name[strlen(opt_applylog_index_name) - 1] ==
+          FN_LIBCHAR) {
     // NO_LINT_DEBUG
-    sql_print_information("Path '%s' is a directory name, please specify a "
-        "file name for --apply-log-index option", opt_applylog_index_name);
+    sql_print_information(
+        "Path '%s' is a directory name, please specify a "
+        "file name for --apply-log-index option",
+        opt_applylog_index_name);
     DBUG_RETURN(1);
   }
 
-  if (opt_apply_logname && opt_applylog_index_name)
-    DBUG_RETURN(0);
+  if (opt_apply_logname && opt_applylog_index_name) DBUG_RETURN(0);
 
   if (!opt_apply_logname) {
     /* create the apply binlog name for Raft using some common
@@ -10775,13 +10778,12 @@ static int generate_apply_file_gvars() {
   } else {
     // Just point apply logs to binlogs
     opt_apply_logname =
-      my_strdup(PSI_NOT_INSTRUMENTED, opt_bin_logname, MYF(0));
+        my_strdup(PSI_NOT_INSTRUMENTED, opt_bin_logname, MYF(0));
   }
 
   if (!opt_applylog_index_name && opt_apply_logname) {
-    opt_applylog_index_name =
-          const_cast<char *>(rpl_make_log_name(
-            PSI_NOT_INSTRUMENTED, NULL, opt_apply_logname, ".index"));
+    opt_applylog_index_name = const_cast<char *>(rpl_make_log_name(
+        PSI_NOT_INSTRUMENTED, NULL, opt_apply_logname, ".index"));
   }
 
   DBUG_RETURN(0);
