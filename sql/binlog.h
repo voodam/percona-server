@@ -985,7 +985,6 @@ class MYSQL_BIN_LOG : public TC_LOG {
                    uint32 new_index_number = 0,
                    bool raft_specific_handling = false);
 
-
   /**
     Open an existing binlog/relaylog file
 
@@ -1122,8 +1121,8 @@ class MYSQL_BIN_LOG : public TC_LOG {
    *
    * @return 1 on error, 0 on success
    */
-  int get_lognames_from_index(
-      bool need_lock, std::vector<std::string> *lognames);
+  int get_lognames_from_index(bool need_lock,
+                              std::vector<std::string> *lognames);
 
   bool flush();
   /**

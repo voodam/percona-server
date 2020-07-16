@@ -502,17 +502,16 @@ class MYSQL_BIN_LOG::Binlog_ofile : public Basic_ostream {
      @retval true  Error
   */
   bool seek(my_off_t offset) {
-    if (m_pipeline_head->seek(offset))
-      return true; // error
+    if (m_pipeline_head->seek(offset)) return true;  // error
 
     m_position = 0;
     if (m_encrypted && m_encrypted_header_size > 0 &&
-        m_encrypted_header_size <= (int) offset)
+        m_encrypted_header_size <= (int)offset)
       m_position = offset - m_encrypted_header_size;
     else if (!m_encrypted)
       m_position = offset;
 
-    return false; // success
+    return false;  // success
   }
 
  private:
@@ -3934,8 +3933,8 @@ static bool is_number(const char *str, ulong *res, bool allow_wildcards) {
     nonzero if not possible to get unique filename.
 */
 
-static int find_uniq_filename(
-    char *name, uint32 new_index_number, bool need_next = true) {
+static int find_uniq_filename(char *name, uint32 new_index_number,
+                              bool need_next = true) {
   uint i;
   char buff[FN_REFLEN], ext_buf[FN_REFLEN];
   MY_DIR *dir_info = nullptr;
@@ -4028,20 +4027,15 @@ end:
 
   @retval 1 on error, 0 on success
 */
-static int find_existing_last_file(char *new_name, const char *log_name)
-{
+static int find_existing_last_file(char *new_name, const char *log_name) {
   fn_format(new_name, log_name, mysql_data_home, "", 4);
-  if (fn_ext(log_name)[0])
-    return 0;
+  if (fn_ext(log_name)[0]) return 0;
 
-  if (find_uniq_filename(
-        new_name, /*new_index_number=*/0, /*need_next=*/false))
-  {
-    my_printf_error(
-        ER_NO_UNIQUE_LOGFILE,
-        ER_THD(current_thd, ER_NO_UNIQUE_LOGFILE),
-        MYF(ME_FATALERROR),
-        log_name);
+  if (find_uniq_filename(new_name, /*new_index_number=*/0,
+                         /*need_next=*/false)) {
+    my_printf_error(ER_NO_UNIQUE_LOGFILE,
+                    ER_THD(current_thd, ER_NO_UNIQUE_LOGFILE),
+                    MYF(ME_FATALERROR), log_name);
     // NO_LINT_DEBUG
     sql_print_error("Error trying to find existing last file for %s", log_name);
     return 1;
@@ -5515,10 +5509,10 @@ err:
   return true;
 }
 
-bool MYSQL_BIN_LOG::open_existing_binlog(
-    const char *log_name, ulong max_size_arg) {
+bool MYSQL_BIN_LOG::open_existing_binlog(const char *log_name,
+                                         ulong max_size_arg) {
   DBUG_ENTER("MYSQL_BIN_LOG::open_existing_binlog(const char *, ...)");
-  DBUG_PRINT("enter",("name: %s", log_name));
+  DBUG_PRINT("enter", ("name: %s", log_name));
 
   my_off_t offset = 0;
   File file = -1;
@@ -5535,33 +5529,32 @@ bool MYSQL_BIN_LOG::open_existing_binlog(
   }
 
   // At the end of this "log_file_name" is set to existing_file
-  if (init_and_set_log_file_name(
-        log_name, existing_file, /*new_index_number=*/0)) {
+  if (init_and_set_log_file_name(log_name, existing_file,
+                                 /*new_index_number=*/0)) {
     // NO_LINT_DEBUG
-    sql_print_error("MYSQL_BIN_LOG::open_existing_binlog failed to generate "
+    sql_print_error(
+        "MYSQL_BIN_LOG::open_existing_binlog failed to generate "
         "new file name.");
     DBUG_RETURN(1);
   }
 
   if (!(this->name =
-        my_strdup(key_memory_MYSQL_LOG_name, log_name, MYF(MY_WME)))) {
+            my_strdup(key_memory_MYSQL_LOG_name, log_name, MYF(MY_WME)))) {
     // NO_LINT_DEBUG
     sql_print_error("Could not allocate name %s (error %d)", log_name, errno);
     DBUG_RETURN(1);
   }
 
   auto binlog_file =
-    Binlog_ofile::open_existing(m_key_file_log, log_name, MYF(MY_WME));
-  if (!binlog_file)
-    goto err;
+      Binlog_ofile::open_existing(m_key_file_log, log_name, MYF(MY_WME));
+  if (!binlog_file) goto err;
 
   m_binlog_file = binlog_file.release();
 
-  file = mysql_file_open(
-      m_key_file_log, log_name, O_CREAT | O_WRONLY, MYF(MY_WME));
+  file = mysql_file_open(m_key_file_log, log_name, O_CREAT | O_WRONLY,
+                         MYF(MY_WME));
 
-  if (file < 0)
-    goto err;
+  if (file < 0) goto err;
 
   // seek to end of file
   mysql_file_seek(file, 0L, MY_SEEK_END, MYF(0));
@@ -5572,46 +5565,42 @@ bool MYSQL_BIN_LOG::open_existing_binlog(
       goto err;
   }
 
-  if (file >= 0)
-    mysql_file_close(file, MYF(0));
+  if (file >= 0) mysql_file_close(file, MYF(0));
 
   // Now setup the m_binlog_file correctly by seeking to the end position in the
   // file
-  if (offset > 0)
-    m_binlog_file->seek(offset);
+  if (offset > 0) m_binlog_file->seek(offset);
 
   max_size = max_size_arg;
   update_binlog_end_pos();
   atomic_log_state = LOG_OPENED;
 
-  DBUG_RETURN(0); // Success
+  DBUG_RETURN(0);  // Success
 
 err:
-  if (should_abort_on_binlog_error())
-  {
-    exec_binlog_error_action_abort("Either disk is full or file system is read "
-                                   "only while opening the binlog. Aborting the"
-                                   " server.");
-  }
-  else
+  if (should_abort_on_binlog_error()) {
+    exec_binlog_error_action_abort(
+        "Either disk is full or file system is read "
+        "only while opening the binlog. Aborting the"
+        " server.");
+  } else
     // NO_LINT_DEBUG
-    sql_print_error("Could not open %s for logging (error %d). "
-                    "Turning logging off for the whole duration "
-                    "of the MySQL server process. To turn it on "
-                    "again: fix the cause, shutdown the MySQL "
-                    "server and restart it.",
-                    name, my_errno());
+    sql_print_error(
+        "Could not open %s for logging (error %d). "
+        "Turning logging off for the whole duration "
+        "of the MySQL server process. To turn it on "
+        "again: fix the cause, shutdown the MySQL "
+        "server and restart it.",
+        name, my_errno());
 
-  if (file >= 0)
-    mysql_file_close(file, MYF(0));
+  if (file >= 0) mysql_file_close(file, MYF(0));
 
   my_free(name);
   name = NULL;
   atomic_log_state = LOG_CLOSED;
 
-  DBUG_RETURN(1); // Error
+  DBUG_RETURN(1);  // Error
 }
-
 
 /**
   Move crash safe index file to index file.
@@ -10308,13 +10297,11 @@ int binlog_change_to_apply() {
   mysql_mutex_lock(mysql_bin_log.get_log_lock());
   mysql_bin_log.lock_index();
 
-  mysql_bin_log.close(
-      LOG_CLOSE_INDEX, /*need_lock_log=*/false, /*need_lock_index=*/false);
+  mysql_bin_log.close(LOG_CLOSE_INDEX, /*need_lock_log=*/false,
+                      /*need_lock_index=*/false);
 
-  if (mysql_bin_log.open_index_file(
-        opt_applylog_index_name,
-        opt_apply_logname,
-        /*need_lock_index=*/false)) {
+  if (mysql_bin_log.open_index_file(opt_applylog_index_name, opt_apply_logname,
+                                    /*need_lock_index=*/false)) {
     error = 1;
     goto err;
   }
@@ -10330,14 +10317,12 @@ int binlog_change_to_apply() {
    */
 
   // HLC is TBD
-  if (mysql_bin_log.open_binlog(
-        opt_apply_logname,
-        /*new_name=*/NULL,
-        max_binlog_size,
-        /*null_created_arg=*/false,
-        /*need_lock_index=*/false,
-        /*need_sid_lock=*/true,
-        /*extra_description_event=*/NULL)) {
+  if (mysql_bin_log.open_binlog(opt_apply_logname,
+                                /*new_name=*/NULL, max_binlog_size,
+                                /*null_created_arg=*/false,
+                                /*need_lock_index=*/false,
+                                /*need_sid_lock=*/true,
+                                /*extra_description_event=*/NULL)) {
     error = 1;
     goto err;
   }
@@ -10380,26 +10365,23 @@ int binlog_change_to_binlog() {
     delete_apply_logs = true;
   }
 
-  mysql_bin_log.close(
-      LOG_CLOSE_INDEX, /*need_lock_log=*/false, /*need_lock_index=*/false);
+  mysql_bin_log.close(LOG_CLOSE_INDEX, /*need_lock_log=*/false,
+                      /*need_lock_index=*/false);
 
-  if (mysql_bin_log.open_index_file(
-        opt_binlog_index_name,
-        opt_bin_logname,
-        /*need_lock_index=*/false)) {
+  if (mysql_bin_log.open_index_file(opt_binlog_index_name, opt_bin_logname,
+                                    /*need_lock_index=*/false)) {
     error = 1;
     goto err;
   }
 
   global_sid_lock->wrlock();
   if (mysql_bin_log.init_gtid_sets(
-       const_cast<Gtid_set *>(gtid_state->get_executed_gtids()),
-       const_cast<Gtid_set *>(gtid_state->get_lost_gtids()),
-       opt_master_verify_checksum,
-       /*need_lock=*/false,
-       /*trx_parser=*/nullptr,
-       /*partial_trx=*/nullptr,
-       &prev_hlc)) {
+          const_cast<Gtid_set *>(gtid_state->get_executed_gtids()),
+          const_cast<Gtid_set *>(gtid_state->get_lost_gtids()),
+          opt_master_verify_checksum,
+          /*need_lock=*/false,
+          /*trx_parser=*/nullptr,
+          /*partial_trx=*/nullptr, &prev_hlc)) {
     global_sid_lock->unlock();
     error = 1;
     goto err;
@@ -10423,19 +10405,18 @@ int binlog_change_to_binlog() {
     goto err;
   }
 
-  if (!delete_apply_logs)
-    goto err;
+  if (!delete_apply_logs) goto err;
 
   // 1. Now delete all the apply binlogs
   // 2. Once the apply binlogs are deleted, then proceed to delete the apply
   // binlog index file
   // TODO: This needs better safety - if mysqld crashes between 1 and 2, it will
   // not be able to startup without manual intervention
-  for (const auto& name : lognames) {
-    if (my_delete(name.c_str(), MYF(MY_WME))) {// #1
+  for (const auto &name : lognames) {
+    if (my_delete(name.c_str(), MYF(MY_WME))) {  // #1
       // NO_LINT_DEBUG
       sql_print_error("Could not delete the apply binlog file %s",
-          name.c_str());
+                      name.c_str());
       error = 1;
       goto err;
     }
@@ -10443,7 +10424,7 @@ int binlog_change_to_binlog() {
 
   // NO_LINT_DEBUG
   sql_print_information("Deleting the apply index file %s", indexfn.c_str());
-  if (my_delete(indexfn.c_str(), MYF(MY_WME))) { // #2
+  if (my_delete(indexfn.c_str(), MYF(MY_WME))) {  // #2
     // NO_LINT_DEBUG
     sql_print_error("Failed to delete apply index file %s", indexfn.c_str());
     error = 1;
@@ -10461,38 +10442,35 @@ err:
   DBUG_RETURN(error);
 }
 
-int MYSQL_BIN_LOG::get_lognames_from_index(
-    bool need_lock, std::vector<std::string>* lognames) {
+int MYSQL_BIN_LOG::get_lognames_from_index(bool need_lock,
+                                           std::vector<std::string> *lognames) {
   LOG_INFO log_info;
-  int error= 0;
+  int error = 0;
 
-  if (need_lock)
-    mysql_mutex_lock(&LOCK_index);
+  if (need_lock) mysql_mutex_lock(&LOCK_index);
 
-  if ((error= find_log_pos(&log_info, NullS, false/*need_lock_index=false*/)))
+  if ((error = find_log_pos(&log_info, NullS, false /*need_lock_index=false*/)))
     goto err;
 
   while (true) {
     lognames->emplace_back(log_info.log_file_name);
 
-    int ret= find_next_log(&log_info, false/*need_lock_index=false*/);
+    int ret = find_next_log(&log_info, false /*need_lock_index=false*/);
     if (ret == LOG_INFO_EOF) {
       break;
     } else if (ret == LOG_INFO_IO) {
       // NO_LINT_DEBUG
       sql_print_error("Could not read from log index file ");
-      error= 1;
+      error = 1;
       goto err;
     }
   }
 
 err:
-  if (need_lock)
-    mysql_mutex_unlock(&LOCK_index);
+  if (need_lock) mysql_mutex_unlock(&LOCK_index);
 
   return error;
 }
-
 
 // Given a file name of the form 'binlog-file-name.index', it extracts the
 // <binlog-file-name> and <index> and returns it as a pair
