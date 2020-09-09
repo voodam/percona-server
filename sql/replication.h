@@ -872,8 +872,8 @@ int unregister_trans_observer(Trans_observer *observer, void *p);
    @retval 0 Sucess
    @retval 1 Observer already exists
 */
-int register_raft_replication_observer(
-    Raft_replication_observer *observer, void *p);
+int register_raft_replication_observer(Raft_replication_observer *observer,
+                                       void *p);
 
 /**
    Unregister a raft replication observer
@@ -884,8 +884,8 @@ int register_raft_replication_observer(
    @retval 0 Sucess
    @retval 1 Observer not exists
 */
-int unregister_raft_replication_observer(
-    Raft_replication_observer *observer, void *p);
+int unregister_raft_replication_observer(Raft_replication_observer *observer,
+                                         void *p);
 
 /*
  * An enum to control what kind of registrations the

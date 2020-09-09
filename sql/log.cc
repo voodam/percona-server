@@ -2759,8 +2759,7 @@ int log_vmessage(int log_type MY_ATTRIBUTE((unused)), va_list fili) {
 
       buff[sizeof(buff) - 1] = '\0';
       ll.item[ll.count].data.data_string.str = buff;
-      if (msg_len > (sizeof(buff) - 1))
-        msg_len = sizeof(buff) - 1;
+      if (msg_len > (sizeof(buff) - 1)) msg_len = sizeof(buff) - 1;
       ll.item[ll.count].data.data_string.length = msg_len;
     } else if (ll.item[ll.count].type == LOG_ITEM_LOG_VERBATIM) {
       int wellknown = log_item_wellknown_by_type(LOG_ITEM_LOG_MESSAGE);

@@ -9885,8 +9885,8 @@ void MYSQL_BIN_LOG::handle_binlog_flush_or_sync_error(THD *thd,
   }
 }
 
-int MYSQL_BIN_LOG::register_log_entities(
-    THD *thd, int context, bool need_lock, bool is_relay_log) {
+int MYSQL_BIN_LOG::register_log_entities(THD *thd, int context, bool need_lock,
+                                         bool is_relay_log) {
   if (need_lock)
     mysql_mutex_lock(&LOCK_log);
   else
@@ -9897,26 +9897,23 @@ int MYSQL_BIN_LOG::register_log_entities(
                       log_file_name, &LOCK_log, &LOCK_index, &update_cond,
                       0 /* TODO: &cur_log_ext does not exist */, context));
 
-  if (need_lock)
-    mysql_mutex_unlock(&LOCK_log);
+  if (need_lock) mysql_mutex_unlock(&LOCK_log);
 
   return err;
 }
 
 void MYSQL_BIN_LOG::check_and_register_log_entities(THD *thd) {
   mysql_mutex_assert_owner(&LOCK_log);
-  if (!enable_raft_plugin_save)
-    return;
+  if (!enable_raft_plugin_save) return;
 
   // If this is a master and raft is turned ON, register the IO_cache and the
   // appropriate locks with the plugin.
   if (!mysql_bin_log.is_apply_log) {
     // only register once
-    if (setup_flush_done)
-      return;
+    if (setup_flush_done) return;
 
-    int err = register_log_entities(
-        thd, /*context=*/1, /*need_lock=*/false, /*is_relay_log=*/false);
+    int err = register_log_entities(thd, /*context=*/1, /*need_lock=*/false,
+                                    /*is_relay_log=*/false);
 
     setup_flush_done = (err == 0);
     if (err) {
@@ -9944,7 +9941,8 @@ static int register_entities_with_raft() {
 
   if (err) {
     // NO_LINT_DEBUG
-    sql_print_error("Failed to register binlog file entities with "
+    sql_print_error(
+        "Failed to register binlog file entities with "
         "raft replication observer");
     return err;
   }
@@ -9952,12 +9950,14 @@ static int register_entities_with_raft() {
   channel_map.rdlock();
   if (channel_map.get_num_instances() > 1) {
     // NO_LINT_DEBUG
-    sql_print_error("Number of slave channels connected: %d. Cannot register "
-        "with raft", channel_map.get_num_instances());
-    return 1; // error
+    sql_print_error(
+        "Number of slave channels connected: %d. Cannot register "
+        "with raft",
+        channel_map.get_num_instances());
+    return 1;  // error
   }
 
-  Master_info* mi = channel_map.get_default_channel_mi();
+  Master_info *mi = channel_map.get_default_channel_mi();
 
   if (!mi) {
     // degenerate case returns SUCCESS [ TODO ]
@@ -9966,7 +9966,7 @@ static int register_entities_with_raft() {
 
   // TODO: Verify during integration. m_channel_lock might not be needed here
   mi->channel_rdlock();
-  if (/*mi->host[0] || */  !mi->rli) {
+  if (/*mi->host[0] || */ !mi->rli) {
     // degenerate case returns SUCCESS [ TODO ]
     mi->channel_unlock();
     return 0;
@@ -10002,7 +10002,8 @@ int ask_server_to_register_with_raft(Raft_Registration_Item item) {
       char wal_dir[FN_REFLEN];
       if (!dirname_part(wal_dir, log_bin_basename, &llen)) {
         // NO_LINT_DEBUG
-        sql_print_information("dirname_part for log_file_basename fails. "
+        sql_print_information(
+            "dirname_part for log_file_basename fails. "
             "Falling back to datadir");
         s_wal_dir.assign(mysql_real_data_home_ptr);
       } else {
@@ -10013,7 +10014,8 @@ int ask_server_to_register_with_raft(Raft_Registration_Item item) {
       char log_dir[FN_REFLEN];
       if (!dirname_part(log_dir, log_error_dest, &llen)) {
         // NO_LINT_DEBUG
-        sql_print_information("dirname_part for log_error_dst fails. "
+        sql_print_information(
+            "dirname_part for log_error_dst fails. "
             "Falling back to datadir");
         s_log_dir.assign(mysql_real_data_home_ptr);
       } else {
@@ -10022,8 +10024,8 @@ int ask_server_to_register_with_raft(Raft_Registration_Item item) {
 
       THD *thd = current_thd;
       err = RUN_HOOK(raft_replication, register_paths,
-                     (thd, server_uuid, s_wal_dir, s_log_dir,
-                      log_bin_basename, glob_hostname, (uint64_t) mysqld_port));
+                     (thd, server_uuid, s_wal_dir, s_log_dir, log_bin_basename,
+                      glob_hostname, (uint64_t)mysqld_port));
       break;
     }
     default:
