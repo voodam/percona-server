@@ -34,7 +34,7 @@
 
 namespace myrocks {
 
-class Rdb_thread {
+class Rdb_thread : public Ensure_initialized {
  private:
   // Disable Copying
   Rdb_thread(const Rdb_thread &);

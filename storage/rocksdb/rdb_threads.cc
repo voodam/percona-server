@@ -52,6 +52,7 @@ void Rdb_thread::init(
   mysql_cond_init(stop_bg_psi_cond_key, &m_signal_cond);
 
   on_init();
+  initialized = true;
 }
 
 void Rdb_thread::uninit() {
@@ -76,6 +77,8 @@ int Rdb_thread::create_thread(const std::string &thread_name
 }
 
 void Rdb_thread::signal(const bool stop_thread) {
+  if (!initialized) return;
+
   RDB_MUTEX_LOCK_CHECK(m_signal_mutex);
 
   if (stop_thread) {
