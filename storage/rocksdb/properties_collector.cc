@@ -230,7 +230,7 @@ rocksdb::Status Rdb_tbl_prop_coll::Finish(
 
     if (m_total_merges > 0) {
       rocksdb_num_sst_entry_other += m_total_merges;
-     }
+    }
 
     for (Rdb_index_stats &stat : m_stats) {
       m_cardinality_collector.SetCardinality(&stat);
@@ -267,7 +267,7 @@ bool Rdb_tbl_prop_coll::FilledWithDeletions() const {
     return true;
   }
   return false;
- }
+}
 
 /*
   Returns the same as above, but in human-readable way for logging
