@@ -248,6 +248,7 @@ net_compression_level	6
 net_read_timeout	300
 net_retry_count	10
 net_write_timeout	200
+set SQL_BIG_SELECTS=1;
 select * from performance_schema.global_variables where variable_name like 'net_%' order by 1;
 VARIABLE_NAME	VARIABLE_VALUE
 net_buffer_length	1024
@@ -286,6 +287,7 @@ net_compression_level	6
 net_read_timeout	900
 net_retry_count	10
 net_write_timeout	1000
+set SQL_BIG_SELECTS=0;
 set global net_buffer_length=1;
 Warnings:
 Warning	1292	Truncated incorrect net_buffer_length value: '1'
