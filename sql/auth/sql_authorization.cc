@@ -1897,8 +1897,8 @@ bool check_readonly(THD *thd, bool err_if_readonly) {
   local binlog transactions.
   */
   if (is_super && !opt_super_readonly &&
-      (enable_super_log_bin_read_only ||
-       !(thd->variables.option_bits & OPTION_BIN_LOG)))
+      !(enable_super_log_bin_read_only &&
+        (thd->variables.option_bits & OPTION_BIN_LOG)))
     return false;
 
   /* throw error in standardized way if requested: */
