@@ -40,7 +40,7 @@
 call mtr.add_suppression("Failed to set up SSL because of the following SSL library error");
 
 let $total_global_vars=`SELECT COUNT(*) FROM performance_schema.global_variables where variable_name NOT LIKE 'ndb_%'`;
-let $total_persistent_vars= `SELECT $total_global_vars - 216`;
+let $total_persistent_vars= `SELECT $total_global_vars - 215`;
 
 
 
@@ -88,6 +88,12 @@ if (`SELECT COUNT(*) FROM performance_schema.global_variables WHERE variable_nam
 
 # override_enable_raft_check was added, but it cannot be persisted
 if (`SELECT COUNT(*) FROM performance_schema.global_variables WHERE variable_name = 'override_enable_raft_check'`)
+{
+  --dec $total_persistent_vars
+}
+
+# disable_raft_log_repointing was added, but it cannot be persisted
+if (`SELECT COUNT(*) FROM performance_schema.global_variables WHERE variable_name = 'disable_raft_log_repointing'`)
 {
   --dec $total_persistent_vars
 }
