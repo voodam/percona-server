@@ -356,7 +356,7 @@ const LEX_CSTRING plugin_type_names[MYSQL_MAX_PLUGIN_TYPE_NUM] = {
     {STRING_WITH_LEN("CLONE")}};
 
 /* raft plugin name */
-MYSQL_LEX_CSTRING raft_plugin_name = {C_STRING_WITH_LEN("RPL_RAFT")};
+MYSQL_LEX_CSTRING raft_plugin_name = {STRING_WITH_LEN("RPL_RAFT")};
 
 extern int initialize_schema_table(st_plugin_int *plugin);
 extern int finalize_schema_table(st_plugin_int *plugin);
