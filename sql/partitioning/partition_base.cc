@@ -2778,8 +2778,7 @@ int Partition_base::read_range_next_in_part(uint part, uchar *buf) {
                             column
     false                   Otherwise
 */
-bool Partition_base::last_part_has_ttl_column() const
-{
+bool Partition_base::last_part_has_ttl_column() const {
   DBUG_ENTER("ha_partition::last_part_has_ttl_column");
 
   /*
@@ -2788,10 +2787,9 @@ bool Partition_base::last_part_has_ttl_column() const
     on the saved last partition being where the error is happening and
     only check that partition.
    */
-  handler *file= m_file[m_last_part];
+  handler *file = m_file[m_last_part];
   DBUG_RETURN(file->last_part_has_ttl_column());
 }
-
 
 /****************************************************************************
                 MODULE information calls
