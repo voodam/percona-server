@@ -4307,6 +4307,8 @@ void MYSQL_BIN_LOG::cleanup() {
     if (!is_relay_log) {
       Commit_stage_manager::get_instance().deinit();
     }
+    // Clear the HLC map, forcing mutexes and condvars to be cleaned up
+    hlc.clear_database_hlc();
   }
 
   delete m_binlog_file;
