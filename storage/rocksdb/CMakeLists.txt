@@ -52,7 +52,7 @@ IF (HAVE_SSE42 AND HAVE_PCLMUL)
   add_compile_flags(${ROCKSDB_ROOT}/util/crc32c.cc COMPILE_FLAGS "-msse4.2 -mpclmul")
   MESSAGE(STATUS "MyRocks: SSE42 support found")
 ELSE()
-  MESSAGE(WARNING "No SSE42 support found and ALLOW_NO_SSE42 specified, building MyRocks but without SSE42/FastCRC32 support")
+  MESSAGE(WARNING "No SSE42 support found, building MyRocks but without SSE42/FastCRC32 support")
 ENDIF()
 
 IF (HAVE_AVX2)

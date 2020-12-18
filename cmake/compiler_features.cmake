@@ -159,7 +159,7 @@ int main() {
   backtrace_symbols(frames, backtrace(frames, 1));
   return 0;
 }
-" HAVE_BACKTRACE)
+" HAVE_BACKTRACE_SYMBOLS)
 
 
 CHECK_CXX_SOURCE_COMPILES("
@@ -181,7 +181,7 @@ else()
   check_cxx_symbol_exists(malloc_usable_size malloc.h HAVE_MALLOC_USABLE_SIZE)
 endif()
 
-check_cxx_symbol_exists(sched_getcpu sched.h HAVE_SCHED_GETCPU)
+check_cxx_symbol_exists(sched_getcpu sched.h ROCKSDB_SCHED_GETCPU_PRESENT)
 check_cxx_symbol_exists(getauxval sys/auxv.h HAVE_AUXV_GETAUXVAL)
 
 
@@ -250,11 +250,11 @@ MACRO(ROCKSDB_SET_DEFINTIONS)
 	  add_definitions(-DROCKSDB_MALLOC_USABLE_SIZE)
 	endif()
 
-	if(HAVE_BACKTRACE AND NOT ROCKSDB_DISABLE_BACKTRACE)
+	if(HAVE_BACKTRACE_SYMBOLS AND NOT ROCKSDB_DISABLE_BACKTRACE)
 	  add_definitions(-DROCKSDB_BACKTRACE)
 	endif()
 
-	if(HAVE_SCHED_GETCPU AND NOT ROCKSDB_DISABLE_SCHED_GETCPU)
+	if(ROCKSDB_SCHED_GETCPU_PRESENT AND NOT ROCKSDB_DISABLE_SCHED_GETCPU)
 	  add_definitions(-DROCKSDB_SCHED_GETCPU_PRESENT -DHAVE_SCHED_GETCPU=1)
 	endif()
 
