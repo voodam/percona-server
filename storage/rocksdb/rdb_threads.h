@@ -75,7 +75,10 @@ class Rdb_thread : public Ensure_initialized {
 
   void signal(const bool stop_thread = false);
 
-  int join() { return pthread_join(m_handle.thread, nullptr); }
+  int join() {
+    if (!m_run_once) return EINVAL;
+    return pthread_join(m_handle.thread, nullptr);
+  }
 
   void setname() {
     /*

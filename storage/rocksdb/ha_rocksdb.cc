@@ -6202,14 +6202,16 @@ static int rocksdb_init_internal(void *const p) {
   DBUG_EXECUTE_IF("rocksdb_init_failure_open_db", {
     // Simulate opening TransactionDB failure
     status = rocksdb::Status::Corruption();
+    // fix a memory leak caused by not calling cf_manager.init()
+    for (auto cfh_ptr : cf_handles) delete (cfh_ptr);
   });
-
-  cf_manager.init(std::move(cf_options_map), &cf_handles);
 
   if (!status.ok()) {
     rdb_log_status_error(status, "Error opening instance");
     DBUG_RETURN(HA_EXIT_FAILURE);
   }
+
+  cf_manager.init(std::move(cf_options_map), &cf_handles);
 
   // NO_LINT_DEBUG
   sql_print_information("RocksDB: Initializing data dictionary...");
