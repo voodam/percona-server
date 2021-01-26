@@ -368,7 +368,8 @@ enum ib_file_suffix {
   CFP = 3,
   IBT = 4,
   IBU = 5,
-  DWR = 6
+  DWR = 6,
+  BWR = 7
 };
 
 extern const char *dot_ext[];

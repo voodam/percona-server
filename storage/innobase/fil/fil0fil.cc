@@ -280,7 +280,8 @@ Fil_path MySQL_datadir_path;
 Fil_path MySQL_undo_path;
 
 /** Common InnoDB file extentions */
-const char *dot_ext[] = {"", ".ibd", ".cfg", ".cfp", ".ibt", ".ibu", ".dblwr"};
+const char *dot_ext[] = {"",     ".ibd", ".cfg",   ".cfp",
+                         ".ibt", ".ibu", ".dblwr", ".bdblwr"};
 
 /** The number of fsyncs done to the log */
 ulint fil_n_log_flushes = 0;
@@ -4423,7 +4424,7 @@ bool fil_replace_tablespace(space_id_t old_space_id, space_id_t new_space_id,
   page_no_t n_pages = SRV_UNDO_TABLESPACE_SIZE_IN_PAGES;
 #if !defined(NO_FALLOCATE) && defined(UNIV_LINUX)
   bool atomic_write = false;
-  if (!dblwr::enabled) {
+  if (!dblwr::is_enabled()) {
     atomic_write = fil_fusionio_enable_atomic_write(fh);
   }
 #else
@@ -5492,7 +5493,7 @@ dberr_t fil_ibd_open(bool validate, fil_type_t purpose, space_id_t space_id,
 
 #if !defined(NO_FALLOCATE) && defined(UNIV_LINUX)
   const bool atomic_write =
-      !dblwr::enabled && fil_fusionio_enable_atomic_write(df.handle());
+      !dblwr::is_enabled() && fil_fusionio_enable_atomic_write(df.handle());
 #else
   const bool atomic_write = false;
 #endif /* !NO_FALLOCATE && UNIV_LINUX */
