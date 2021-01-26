@@ -462,6 +462,15 @@ static TYPELIB innodb_default_row_format_typelib = {
     "innodb_default_row_format_typelib", innodb_default_row_format_names,
     nullptr};
 
+/** Possible values for system variable "innodb_doublewrite". */
+static const char *innodb_doublewrite_names[] = {"OFF", "ON", "REDUCED", NullS};
+
+/** Used to define an enumerate type of the system variable
+innodb_default_row_format. */
+static TYPELIB innodb_doublewrite_typelib = {
+    array_elements(innodb_doublewrite_names) - 1, "innodb_doublewrite_typelib",
+    innodb_doublewrite_names, nullptr};
+
 #else  /* !UNIV_HOTBACKUP */
 
 /** Returns the name of the checksum algorithm corresponding to the
@@ -867,6 +876,77 @@ static int default_encryption_key_id_validate(
   *reinterpret_cast<ulong *>(save) = static_cast<ulong>(key_id);
 
   DBUG_RETURN(0);
+}
+
+/** Plugin update function to handle valdiation and then switch the
+innodb_doublewrite mode
+@param[in]	thd	thread handle
+@param[in]	var	pointer to system variable
+@param[in]	var_ptr	where the formal string goes
+@param[in]	save	immediate result from check function */
+static void doublewrite_update(THD *thd, SYS_VAR *var, void *var_ptr,
+                               const void *save) {
+  const auto new_value = *static_cast<const dblwr::mode_t *>(save);
+
+  if (dblwr::is_enabled() && new_value == dblwr::OFF) {
+    my_error(ER_WRONG_ARGUMENTS, MYF(0),
+             "InnoDB: cannot change doublewrite mode to OFF if"
+             " doublewrite is enabled. Please shutdown and"
+             " change value to OFF");
+    /*
+    push_warning_printf(thd, Sql_condition::SL_WARNING, HA_ERR_UNSUPPORTED,
+                        "InnoDB: cannot change doublewrite mode to OFF if"
+                        " doublewrite is enabled. Please shutdown and"
+                        " change value to OFF");
+    */
+    return;
+  }
+
+  if (dblwr::is_disabled() &&
+      (new_value == dblwr::ON || new_value == dblwr::REDUCED)) {
+    char msg[FN_REFLEN];
+    snprintf(msg, sizeof(msg),
+             "InnoDB: cannot change doublewrite mode to %s if"
+             " doublewrite is disabled. Please shutdown and"
+             " change value to %s",
+             to_string(new_value), to_string(new_value));
+
+    my_error(ER_WRONG_ARGUMENTS, MYF(0), msg);
+
+    return;
+  }
+
+  if (new_value == dblwr::enabled) {
+    // Old value and new value same. Do nothing.
+    return;
+  }
+
+  // Handle ON to REDUCED
+  // 1. Check if REDUCED setup is already initalized. If not intialized REDUCED
+  //    files and structures
+  // 2. Flush the partially filled dblwr buffers
+  //
+  if (new_value == dblwr::REDUCED) {
+    dberr_t err = dblwr::enable_reduced(false);
+    if (err != DB_SUCCESS) {
+      char msg[FN_REFLEN];
+      snprintf(msg, sizeof(msg),
+               "InnoDB: cannot change doublewrite mode to %s."
+               " Please check if doublewrite directory is writable"
+               " Error code: %d",
+               to_string(new_value), err);
+      my_error(ER_WRONG_ARGUMENTS, MYF(0), msg);
+      return;
+    }
+  }
+
+  // Handle REDUCED to ON
+  // 1. Flush partially filled reduced dblwr buffers
+
+  dblwr::force_flush_all();
+
+  *static_cast<dblwr::mode_t *>(var_ptr) =
+      *static_cast<const dblwr::mode_t *>(save);
 }
 
 static void default_encryption_key_id_update(
@@ -5142,7 +5222,7 @@ static int innodb_init_params() {
 
     /* There is no write except to intrinsic table and so turn-off
     doublewrite mechanism completely. */
-    dblwr::enabled = false;
+    dblwr::enabled = dblwr::OFF;
   }
 
 #ifdef LINUX_NATIVE_AIO
@@ -13423,7 +13503,7 @@ static bool innobase_ddse_dict_init(
   DBUG_ASSERT(tables && tables->is_empty());
   DBUG_ASSERT(tablespaces && tablespaces->is_empty());
 
-  if (dblwr::enabled) {
+  if (dblwr::is_enabled()) {
     if (innobase_doublewrite_dir != nullptr && *innobase_doublewrite_dir != 0) {
       dblwr::dir.assign(innobase_doublewrite_dir);
       switch (dblwr::dir.front()) {
@@ -23365,11 +23445,11 @@ static MYSQL_SYSVAR_BOOL(
     nullptr, nullptr, TRUE);
 
 // clang-format off
-static MYSQL_SYSVAR_BOOL(
-    doublewrite, dblwr::enabled, PLUGIN_VAR_NOCMDARG | PLUGIN_VAR_READONLY,
+static MYSQL_SYSVAR_ENUM(
+    doublewrite, dblwr::enabled, PLUGIN_VAR_OPCMDARG | PLUGIN_VAR_NOPERSIST,
     "Enable InnoDB doublewrite buffer (enabled by default)."
     " Disable with --skip-innodb-doublewrite.",
-    nullptr, nullptr, TRUE);
+    nullptr, doublewrite_update, dblwr::ON, &innodb_doublewrite_typelib);
 
 static MYSQL_SYSVAR_STR(
     doublewrite_dir, innobase_doublewrite_dir, PLUGIN_VAR_READONLY,
