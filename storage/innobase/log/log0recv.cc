@@ -3706,7 +3706,7 @@ dberr_t recv_recovery_from_checkpoint_start(log_t &log, lsn_t flush_lsn) {
     /* Restore state after recovery completes. */
     recv_sys->dblwr_state = dblwr::enabled;
 
-    dblwr::enabled = false;
+    dblwr::enabled = dblwr::OFF;
 
     dblwr::set();
 

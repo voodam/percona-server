@@ -283,7 +283,8 @@ Fil_path MySQL_undo_path;
 bool MySQL_undo_path_is_unique;
 
 /** Common InnoDB file extentions */
-const char *dot_ext[] = {"", ".ibd", ".cfg", ".cfp", ".ibt", ".ibu", ".dblwr"};
+const char *dot_ext[] = {"",     ".ibd",   ".cfg",    ".cfp",   ".ibt",
+                         ".ibu", ".dblwr", ".bdblwr", ".sdblwr"};
 
 /** The number of fsyncs done to the log */
 ulint fil_n_log_flushes = 0;
@@ -5625,7 +5626,7 @@ dberr_t fil_ibd_open(bool validate, fil_type_t purpose, space_id_t space_id,
 
 #if !defined(NO_FALLOCATE) && defined(UNIV_LINUX)
   const bool atomic_write =
-      !dblwr::enabled && fil_fusionio_enable_atomic_write(df.handle());
+      !dblwr::is_enabled() && fil_fusionio_enable_atomic_write(df.handle());
 #else
   const bool atomic_write = false;
 #endif /* !NO_FALLOCATE && UNIV_LINUX */
