@@ -18,20 +18,20 @@ jobs:
 
   strategy:
     matrix:
-      Clang-10 ASan:
+      Clang-11 ASan:
         Compiler: clang
-        CompilerVer: 10
+        CompilerVer: 11
         BuildType: Debug
         SanitizerType: ASan
 
-      Clang-10 Debug:
+      Clang-11 Debug:
         Compiler: clang
-        CompilerVer: 10
+        CompilerVer: 11
         BuildType: Debug
 
-      Clang-10 Release:
+      Clang-11 Release:
         Compiler: clang
-        CompilerVer: 10
+        CompilerVer: 11
         BuildType: RelWithDebInfo
 
       Clang-9 Debug:
