@@ -507,12 +507,12 @@ dberr_t Datafile::validate_for_recovery(space_id_t space_id) {
       }
 
       err = restore_from_doublewrite(0);
+      /* Free the previously read first page and then re-validate. */
+      free_first_page();
       if (err != DB_SUCCESS) {
         return (err);
       }
 
-      /* Free the previously read first page and then re-validate. */
-      free_first_page();
       err = validate_first_page(space_id, nullptr, false);
   }
 
