@@ -4244,7 +4244,8 @@ static xa_status_code rocksdb_commit_by_xid(handlerton *const hton,
   assert(xid != nullptr);
   assert(commit_latency_stats != nullptr);
 
-  rocksdb::StopWatchNano timer(rocksdb::Env::Default(), true);
+  rocksdb::StopWatchNano timer(rocksdb::Env::Default()->GetSystemClock().get(),
+                               true);
 
   const auto name = rdb_xid_to_string(*xid);
   assert(!name.empty());
@@ -4361,7 +4362,8 @@ static int rocksdb_commit(handlerton *const hton, THD *const thd,
   assert(thd != nullptr);
   assert(commit_latency_stats != nullptr);
 
-  rocksdb::StopWatchNano timer(rocksdb::Env::Default(), true);
+  rocksdb::StopWatchNano timer(rocksdb::Env::Default()->GetSystemClock().get(),
+                               true);
 
   /* note: h->external_lock(F_UNLCK) is called after this function is called) */
   Rdb_transaction *tx = get_tx_from_thd(thd);
