@@ -687,7 +687,7 @@ static int rocksdb_tracing(THD *const thd MY_ATTRIBUTE((__unused__)),
   const char *const trace_opt_str_raw = value->val_str(value, buf, &len);
   *static_cast<const char **>(save) = trace_opt_str_raw;
   if (trace_opt_str_raw == nullptr) {
-    return HA_EXIT_SUCCESS;
+    return HA_EXIT_FAILURE;
   }
 
   rocksdb::Status s;
