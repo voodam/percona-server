@@ -882,10 +882,10 @@ public:
   {
     if (m_flags & CONTAINS_DYNAMIC_SQL)
       my_error(ER_STMT_NOT_ALLOWED_IN_SF_OR_TRG, MYF(0), "Dynamic SQL");
-    else if (m_flags & MULTI_RESULTS)
-      my_error(ER_SP_NO_RETSET, MYF(0), where);
     else if (m_flags & HAS_SET_AUTOCOMMIT_STMT)
       my_error(ER_SP_CANT_SET_AUTOCOMMIT, MYF(0));
+    else if (m_flags & MULTI_RESULTS)
+      my_error(ER_SP_NO_RETSET, MYF(0), where);
     else if (m_flags & HAS_COMMIT_OR_ROLLBACK)
       my_error(ER_COMMIT_NOT_ALLOWED_IN_SF_OR_TRG, MYF(0));
     else if (m_flags & HAS_SQLCOM_RESET)
